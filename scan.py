@@ -12,22 +12,15 @@ class headers_f(dict):
     def add(self, key, value):
         self[key] = value
 
-        
+
+
+
 class analisys:
     
-    def __inti__(self):
+    def __init__(self):
+        self.cvss=0
         pass
 
-
-    def port_scanner_(self,ip,port):
-            s = socket.socket()
-            try:
-                s.connect((ip, port))
-                s.settimeout(2)
-                banner = s.recv(1024).decode().strip().replace('\n',' ').replace('\r',' ')
-            except: 
-                banner=""
-            return banner
 
     def host_port(host,port):
 
@@ -38,19 +31,15 @@ class analisys:
         nmap = nmap3.Nmap()
         #-p1-65000
         open_ports=nmap.nmap_version_detection(host)
-        for lin in open_ports:
+        for host in open_ports:
             try:
-                for line in open_ports[lin]['ports']:
-                    flag=port_scanner_(host,int(line['portid']))
-                    if line['state'] == 'open':
-                        lista_ports=flag
-                        saida.add(line['portid']+"/"+line['protocol'], lista_ports)
+                ports_=open_ports[host]['ports']
+                for port in ports_:
+                    saida.add(port['portid']+'/'+port['protocol'],port)
             except:
                 pass
-        return saida
 
-    def dns_brute_force(host):
-        return nmap.nmap_dns_brute_script(host)
+        return saida
 
     def recursive_dns(self,host, recursive_dns=False, recursive_scan=False):
         saida = headers_f()
@@ -63,6 +52,46 @@ class analisys:
                     else:
                         saida.add(hosts['hostname'],[{}])
         return saida
+    
+    def execute_script_vulners(self,host,port)  :
+        saida=headers_f()
+        nmap = nmap3.Nmap()
+        #,'scripts/vulscan/'
+        scripts=['scripts/nmap-vulners/']
+        for scr in scripts:
+            script=nmap.nmap_version_detection(host, args='-p'+str(port)+' --script='+scr)
+            for item in script:
+                try:
+                    for line in script[item]['ports']:
+                        for scripts in line['scripts']:
+                            s=scripts['data']
+                            for lne in s :
+                                try:
+                                    for line in s[lne]['children']:
+                                        saida.add(line['id'],line)
+                                except:
+                                    pass
+                except:
+                    pass
+            
+            return saida
+        
+    def pipeline(self,url):
+        
+        pass
+        
+    def relatorio(self,url):
+        ret={}
+        host=urlparse(url)
+        response=self.scan_ports(host.hostname)
+        ret={
+            host.hostname:{"port_scan":response},
+            'cvss':self.cvss
+            }
+        return ret
+
+
+
 
 def http_banner(url):
     try:

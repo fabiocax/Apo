@@ -1,5 +1,5 @@
 requests
 requests-toolbelt
 urllib3
-gradio
 python3-nmap
+gradio==2.6.4
