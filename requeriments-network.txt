@@ -1,0 +1,5 @@
+requests
+requests-toolbelt
+urllib3
+gradio
+python3-nmap
