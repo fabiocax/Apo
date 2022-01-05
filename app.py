@@ -6,13 +6,25 @@ hosts=analisys()
 
 
 def relatorio_gradle(url):
-    files =hosts.relatorio(url) 
-    return 10,files
+    hosts=analisys()
+    cvss,scans =hosts.relatorio(url) 
+    if hosts.cvss_score(cvss) == "Critical":
+        color="red"
+    elif hosts.cvss_score(cvss) == "High":
+        color="brown"
+    elif hosts.cvss_score(cvss) == "Medium":
+        color="yellow"
+    else:
+        color="green"
+        
+    html='<center><b><p style="color:'+color+'">'+hosts.cvss_score(cvss).upper()+' ('+str(cvss)+')</p></b></center>'  
+        
+    return html,scans
 
 
 iface = gr.Interface(relatorio_gradle, "text", 
                      [
-                        gr.outputs.Label(label="CVSS",num_top_classes=4),
+                        gr.outputs.HTML(label="CVSS"),
                         gr.outputs.JSON(label=""),
                      ]
         )
