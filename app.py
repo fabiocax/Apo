@@ -5,8 +5,8 @@ from urllib.parse import urlparse
 hosts=analisys()
 
 
-def relatorio_gradle(url):
-    hosts=analisys()
+def relatorio_gradle(url,scanfull):
+    hosts=analisys(scanfull)
     cvss,scans =hosts.relatorio(url) 
     if hosts.cvss_score(cvss) == "Critical":
         color="red"
@@ -22,7 +22,7 @@ def relatorio_gradle(url):
     return html,scans
 
 
-iface = gr.Interface(relatorio_gradle, "text", 
+iface = gr.Interface(relatorio_gradle, ["text",gr.inputs.Checkbox(label="Scan Full?")], 
                      [
                         gr.outputs.HTML(label="CVSS"),
                         gr.outputs.JSON(label=""),

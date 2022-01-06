@@ -14,8 +14,9 @@ class headers_f(dict):
         
 class analisys:
     
-    def __init__(self):
+    def __init__(self,fullscan=False):
         self.cvss=[0]
+        self.fullscan=fullscan
         pass
     
     
@@ -28,6 +29,8 @@ class analisys:
                 port=80
             if url.scheme =='https':
                 port=443
+            if url.scheme =='ssh':
+                port=22
         return port
 
 
@@ -47,7 +50,10 @@ class analisys:
     def scan_ports(self,host,port=None) -> dict :
         saida=headers_f()
         nmap = nmap3.Nmap()
-        open_ports=nmap.nmap_version_detection(host)
+        if self.fullscan == True:
+            open_ports=nmap.nmap_version_detection(host,'--script=vuln')
+        else:
+            open_ports=nmap.nmap_version_detection(host,'-p'+str(port))
         #-p1-65000
         for host in open_ports:
             try:
@@ -101,7 +107,7 @@ class analisys:
         vulnerabilities=headers_f()
         host=urlparse(url)
         port=self.host_port(host)
-        scan=self.scan_ports(host.hostname)
+        scan=self.scan_ports(host.hostname,port)
         scan_analisys=scan[str(port)]
         
         retorno={
@@ -110,19 +116,26 @@ class analisys:
             'service_name':scan_analisys['service']['name'],        
             'service_description':scan_analisys['service'],
             'vulnerabilities':{
+                'vulscan':{
                         'Critical':[],
                         'High':[],
                         'Medium':[],
-                        'Low':[]},
-            
+                        'Low':[]
+                            }
+                        },
+            'host_scan':scan,
             'cvss':0,
                 }
         ### Scan vulners
         vulners=self.execute_script_vulners(host.hostname,port)
-        retorno['vulnerabilities']['Critical']=list(filter(lambda score: vulners[score] == 'Critical', vulners))
-        retorno['vulnerabilities']['High']=list(filter(lambda score: vulners[score] == 'High', vulners))
-        retorno['vulnerabilities']['Medium']=list(filter(lambda score: vulners[score] == 'Medium', vulners))
-        retorno['vulnerabilities']['Low']=list(filter(lambda score: vulners[score] == 'Low', vulners))
+        retorno['vulnerabilities']['vulscan']['Critical']=list(filter(lambda score: vulners[score] == 'Critical', vulners))
+        retorno['vulnerabilities']['vulscan']['High']=list(filter(lambda score: vulners[score] == 'High', vulners))
+        retorno['vulnerabilities']['vulscan']['Medium']=list(filter(lambda score: vulners[score] == 'Medium', vulners))
+        retorno['vulnerabilities']['vulscan']['Low']=list(filter(lambda score: vulners[score] == 'Low', vulners))
+        #######
+
+
+
         retorno['cvss']=max(self.cvss)
         ret.add(host.hostname,retorno)
         
